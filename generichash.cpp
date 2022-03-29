@@ -57,7 +57,12 @@ uint32 MurmurHash3_32( const void * key, size_t len, uint32 seed, bool bCaseless
 
 	for(ptrdiff_t i = -nblocks; i; i++)
 	{
+#if __psp__ /* unaligned access fix */
+		uint32 k1;
+		memcpy( &k1, &blocks[i], sizeof( uint32 ) );
+#else
 		uint32 k1 = LittleDWord(blocks[i]);
+#endif
 		k1 &= uSourceBitwiseAndMask;
 
 		k1 *= 0xcc9e2d51;
@@ -131,9 +136,14 @@ void MurmurHash3_128( const void * key, const int len, const uint32 seed, void *
 
 	for ( int i = 0; i < nblocks; i++ )
 	{
+#if __psp__ /* unaligned access fix */
+		uint64 k1, k2; 
+		memcpy( &k1, &blocks[i * 2 + 0], sizeof( uint64 ) );
+		memcpy( &k2, &blocks[i * 2 + 1], sizeof( uint64 ) );
+#else
 		uint64 k1 = blocks[i * 2 + 0];
 		uint64 k2 = blocks[i * 2 + 1];
-
+#endif
 		k1 *= c1; k1 = ROTL64( k1, 31 ); k1 *= c2; h1 ^= k1;
 
 		h1 = ROTL64( h1, 27 ); h1 += h2; h1 = h1 * 5 + 0x52dce729;
